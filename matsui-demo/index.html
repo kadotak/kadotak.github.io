@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>レビュー分析</title>
+</head>
+<body>
+  <h2>レビューを入力してください</h2>
+  <textarea id="review_input" rows="6" cols="60"></textarea><br>
+  <button onclick="analyze()">分析する</button>
+
+  <div id="result"></div>
+
+  <script>
+    function analyze() {
+      const input = document.getElementById("review_input").value;
+
+      const fake_response = {
+        solution: [
+          { tag: "価格が高い", problem: "コストに不満", solution: "割引を検討する" },
+          { tag: "配送が遅い", problem: "到着に3日かかった", solution: "即日配送を導入" }
+        ]
+      };
+
+      let html = "";
+      for (const item of fake_response.solution) {
+        html += `<p><strong>${item.tag}</strong>: ${item.problem} → ${item.solution}</p>`;
+      }
+      document.getElementById("result").innerHTML = html;
+    }
+  </script>
+</body>
+</html>
