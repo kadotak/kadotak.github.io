@@ -2,30 +2,48 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>レビュー分析</title>
+  <title>レビュー分析デモ</title>
 </head>
 <body>
   <h2>レビューを入力してください</h2>
+
+  <!-- レビュー入力欄（複数行） -->
   <textarea id="review_input" rows="6" cols="60"></textarea><br>
+
+  <!-- 分析ボタン：クリック時に JavaScript 関数 analyze() を呼び出す -->
   <button onclick="analyze()">分析する</button>
 
+  <!-- 結果表示エリア -->
   <div id="result"></div>
 
   <script>
-    function analyze() {
+    // JavaScript 関数：FlaskにPOSTでレビューを送り、GPTの結果を受け取って表示
+    async function analyze() {
+      // 入力されたレビューを取得
       const input = document.getElementById("review_input").value;
 
-      const fake_response = {
-        solution: [
-          { tag: "価格が高い", problem: "コストに不満", solution: "割引を検討する" },
-          { tag: "配送が遅い", problem: "到着に3日かかった", solution: "即日配送を導入" }
-        ]
-      };
+      // Flask サーバー（http://127.0.0.1:5000）に POST リクエストを送信
+      const response = await fetch("http://127.0.0.1:5000/analyze", {
+        method: "POST",  // HTTPメソッド: POST
+        headers: {
+          "Content-Type": "application/json"  // JSON形式で送ることを指定
+        },
+        body: JSON.stringify({
+          selected_reviews: input,  // 入力されたレビュー本文
+          vp: "価格"  // 観点（ここでは固定で「価格」）
+        })
+      });
 
+      // GPT（Flask経由）からのレスポンスを JSON 形式で取得
+      const data = await response.json();
+
+      // 表示用のHTML文字列を生成（タグ、問題、解決策を並べる）
       let html = "";
-      for (const item of fake_response.solution) {
+      for (const item of data.solution) {
         html += `<p><strong>${item.tag}</strong>: ${item.problem} → ${item.solution}</p>`;
       }
+
+      // div#result の中に出力を挿入
       document.getElementById("result").innerHTML = html;
     }
   </script>
