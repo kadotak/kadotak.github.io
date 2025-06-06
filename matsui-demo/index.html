@@ -2,8 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>レビュー分析デモ（VP選択＋簡易自動推定＋形態素）</title>
-  <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.min.js"></script>
+  <title>レビュー分析デモ（軽量版）</title>
 </head>
 <body>
   <h2>レビューを入力してください</h2>
@@ -45,11 +44,10 @@
       ]
     };
 
-    function detectVPFromTokens(tokens) {
+    function detectVP(text) {
       for (const vp in vpKeywordMap) {
-        const keywords = vpKeywordMap[vp];
-        for (const token of tokens) {
-          if (keywords.includes(token.surface_form)) {
+        for (const word of vpKeywordMap[vp]) {
+          if (text.includes(word)) {
             return vp;
           }
         }
@@ -58,44 +56,41 @@
     }
 
     function analyze() {
-      const input = document.getElementById("review_input").value;
-      const selectedVP = document.getElementById("vp_select").value;
+      const input = document.getElementById("review_input").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
 
-      kuromoji.builder({
-        dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
-      }).build(function (err, tokenizer) {
-        if (err) {
-          document.getElementById("result").innerText = "エラー：辞書の読み込みに失敗しました。";
-          return;
+      if (input === "") {
+        resultDiv.innerHTML = "<p style='color:red;'>エラー：レビュー文を入力してください。</p>";
+        return;
+      }
+
+      let vp = document.getElementById("vp_select").value;
+      if (vp === "auto") {
+        vp = detectVP(input);
+      }
+
+      const results = [];
+      for (const word in keywordResponses) {
+        if (input.includes(word)) {
+          const options = keywordResponses[word];
+          const choice = options[Math.floor(Math.random() * options.length)];
+          results.push(choice);
         }
+      }
 
-        const tokens = tokenizer.tokenize(input);
-        let vp = selectedVP;
-        if (vp === "auto") {
-          vp = detectVPFromTokens(tokens);
+      let html = `<h3>観点: ${vp}</h3>`;
+      if (results.length > 0) {
+        for (const item of results) {
+          html += `<p><strong>${item.tag}</strong>: ${item.problem} → ${item.solution}</p>`;
         }
+      } else {
+        html += "<p>関連キーワードが見つかりませんでした。</p>";
+      }
 
-        const results = [];
-        for (const token of tokens) {
-          if (keywordResponses[token.surface_form]) {
-            const options = keywordResponses[token.surface_form];
-            const choice = options[Math.floor(Math.random() * options.length)];
-            results.push(choice);
-          }
-        }
-
-        let html = `<h3>観点: ${vp}</h3>`;
-        if (results.length > 0) {
-          for (const item of results) {
-            html += `<p><strong>${item.tag}</strong>: ${item.problem} → ${item.solution}</p>`;
-          }
-        } else {
-          html += "<p>関連キーワードが見つかりませんでした。</p>";
-        }
-
-        document.getElementById("result").innerHTML = html;
-      });
+      resultDiv.innerHTML = html;
     }
   </script>
 </body>
 </html>
+
