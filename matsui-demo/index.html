@@ -2,49 +2,36 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>レビュー分析デモ</title>
+  <title>レビュー形態素解析デモ</title>
+  <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dist/kuromoji.js"></script>
 </head>
 <body>
-  <h2>レビューを入力してください</h2>
+  <h2>レビューを入力してください（日本語）</h2>
+  <textarea id="review_input" rows="6" cols="60">この服はとても暖かいが、値段が高い。</textarea><br>
+  <button onclick="analyze()">名詞を抽出</button>
 
-  <!-- レビュー入力欄（複数行） -->
-  <textarea id="review_input" rows="6" cols="60"></textarea><br>
-
-  <!-- 分析ボタン：クリック時に JavaScript 関数 analyze() を呼び出す -->
-  <button onclick="analyze()">分析する</button>
-
-  <!-- 結果表示エリア -->
   <div id="result"></div>
 
   <script>
-    // JavaScript 関数：FlaskにPOSTでレビューを送り、GPTの結果を受け取って表示
-    async function analyze() {
-      // 入力されたレビューを取得
+    function analyze() {
       const input = document.getElementById("review_input").value;
 
-      // Flask サーバー（http://127.0.0.1:5000）に POST リクエストを送信
-      const response = await fetch("http://127.0.0.1:5000/analyze", {
-        method: "POST",  // HTTPメソッド: POST
-        headers: {
-          "Content-Type": "application/json"  // JSON形式で送ることを指定
-        },
-        body: JSON.stringify({
-          selected_reviews: input,  // 入力されたレビュー本文
-          vp: "価格"  // 観点（ここでは固定で「価格」）
-        })
+      kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }).build(function (err, tokenizer) {
+        if (err) {
+          document.getElementById("result").innerText = "辞書の読み込みエラー: " + err;
+          return;
+        }
+
+        const tokens = tokenizer.tokenize(input);
+        const nouns = tokens.filter(t => t.pos === "名詞").map(t => t.surface_form);
+
+        let html = "<h3>抽出された名詞（タグ候補）:</h3><ul>";
+        for (const noun of nouns) {
+          html += `<li>${noun}</li>`;
+        }
+        html += "</ul>";
+        document.getElementById("result").innerHTML = html;
       });
-
-      // GPT（Flask経由）からのレスポンスを JSON 形式で取得
-      const data = await response.json();
-
-      // 表示用のHTML文字列を生成（タグ、問題、解決策を並べる）
-      let html = "";
-      for (const item of data.solution) {
-        html += `<p><strong>${item.tag}</strong>: ${item.problem} → ${item.solution}</p>`;
-      }
-
-      // div#result の中に出力を挿入
-      document.getElementById("result").innerHTML = html;
     }
   </script>
 </body>
