@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>レビュー分析（ローカル版）</title>
+</head>
+<body>
+  <h2>レビューを入力してください</h2>
+
+  <form method="post" action="/analyze">
+    <textarea name="review_input" rows="6" cols="60" placeholder="例：あったかいけど高いです"></textarea><br>
+
+    <label for="vp_select">観点を選択：</label>
+    <select name="vp">
+      <option value="価格">価格</option>
+      <option value="品質">品質</option>
+      <option value="配送">配送</option>
+    </select><br><br>
+
+    <button type="submit">分析する</button>
+  </form>
+
+  {% if results %}
+    <h3>観点: {{ vp }}</h3>
+    {% for item in results %}
+      <p><strong>{{ item.tag }}</strong>: {{ item.problem }} → {{ item.solution }}</p>
+    {% endfor %}
+  {% elif error %}
+    <p style="color: red;">{{ error }}</p>
+  {% endif %}
+</body>
+</html>
