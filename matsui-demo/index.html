@@ -2,36 +2,44 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>レビュー形態素解析デモ</title>
-  <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dist/kuromoji.js"></script>
+  <title>レビュー分析デモ（簡易版）</title>
 </head>
 <body>
-  <h2>レビューを入力してください（日本語）</h2>
-  <textarea id="review_input" rows="6" cols="60">この服はとても暖かいが、値段が高い。</textarea><br>
-  <button onclick="analyze()">名詞を抽出</button>
+  <h2>レビューを入力してください</h2>
 
+  <!-- 入力欄 -->
+  <textarea id="review_input" rows="6" cols="60" placeholder="例：あったかいけど高いです"></textarea><br>
+  <button onclick="analyze()">分析する</button>
+
+  <!-- 結果表示 -->
   <div id="result"></div>
 
   <script>
     function analyze() {
       const input = document.getElementById("review_input").value;
 
-      kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }).build(function (err, tokenizer) {
-        if (err) {
-          document.getElementById("result").innerText = "辞書の読み込みエラー: " + err;
-          return;
+      // 簡易的なキーワードリスト（今後拡張可能）
+      const keywords = ["高い", "安い", "あったかい", "寒い", "軽い", "重い", "遅い", "早い"];
+      const matched = [];
+
+      // 含まれているキーワードだけ抽出
+      for (const word of keywords) {
+        if (input.includes(word)) {
+          matched.push(word);
         }
+      }
 
-        const tokens = tokenizer.tokenize(input);
-        const nouns = tokens.filter(t => t.pos === "名詞").map(t => t.surface_form);
-
-        let html = "<h3>抽出された名詞（タグ候補）:</h3><ul>";
-        for (const noun of nouns) {
-          html += `<li>${noun}</li>`;
+      // 結果を整形して表示
+      if (matched.length > 0) {
+        let html = "<h3>検出されたキーワード：</h3><ul>";
+        for (const word of matched) {
+          html += `<li>${word}</li>`;
         }
         html += "</ul>";
         document.getElementById("result").innerHTML = html;
-      });
+      } else {
+        document.getElementById("result").innerHTML = "<p>キーワードが見つかりませんでした。</p>";
+      }
     }
   </script>
 </body>
